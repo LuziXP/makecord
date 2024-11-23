@@ -1,0 +1,27 @@
+{
+  "name": "discord-bot",
+  "version": "1.0.0",
+  "description": "Discord bot created with MakeCord",
+  "main": "src/cli.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/cli.js",
+    "dev": "nodemon src/cli.js"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "makecord"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "chalk": "^5.3.0",
+    "gradient-string": "^2.0.2",
+    "chokidar": "^3.5.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
