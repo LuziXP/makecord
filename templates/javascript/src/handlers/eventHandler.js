@@ -1,21 +1,23 @@
-import { readdirSync } from 'fs';
-import { join } from 'path';
-import { fileURLToPath } from 'url';
+const fs = require('fs');
+const path = require('path');
+const { logger } = require('../utils/logger');
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-
-export async function loadEvents(client) {
-    const eventsPath = join(__dirname, '..', 'events');
-    const eventFiles = readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+async function loadEvents(client) {
+    const eventsPath = path.join(__dirname, '..', 'events');
+    const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
     for (const file of eventFiles) {
-        const filePath = join(eventsPath, file);
-        const event = (await import('file://' + filePath)).default;
-        
+        const filePath = path.join(eventsPath, file);
+        const event = require(filePath);
+
         if (event.once) {
             client.once(event.name, (...args) => event.execute(...args));
+            logger.info(`Loaded one-time event: ${event.name}`);
         } else {
             client.on(event.name, (...args) => event.execute(...args));
+            logger.info(`Loaded event: ${event.name}`);
         }
     }
 }
+
+module.exports = { loadEvents };

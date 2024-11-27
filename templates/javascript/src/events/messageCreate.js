@@ -1,7 +1,7 @@
-import { Events } from 'discord.js';
-import { config } from '../config.js';
+const { Events } = require('discord.js');
+const { config } = require('../config.js');
 
-export default {
+module.exports = {
     name: Events.MessageCreate,
     execute(message) {
         if (message.author.bot) return;
@@ -17,7 +17,7 @@ export default {
             command.execute(message, args);
         } catch (error) {
             console.error(error);
-            message.reply('Komutu çalıştırırken bir hata oluştu!');
+            message.reply('An error occurred while executing the command!');
         }
     },
 };

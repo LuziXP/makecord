@@ -1,58 +1,99 @@
-import chokidar from 'chokidar';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { logger, showStartupBanner } from './utils/logger.js';
-import { createRequire } from 'module';
+const chokidar = require('chokidar');
+const path = require('path');
+const { logger, showStartupBanner } = require('./utils/logger.js');
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const require = createRequire(import.meta.url);
-
-let bot = null;
+let client = null;
 let isRestarting = false;
+let isFirstStart = true;
 
 async function startBot() {
     try {
-        if (bot) {
-            await bot.destroy();
-            bot = null;
+        if (isFirstStart) {
+            showStartupBanner();
+            isFirstStart = false;
         }
 
-        showStartupBanner();
+        if (client) {
+            await client.destroy();
+            client = null;
+        }
+
         logger.info('Bot starting...');
 
-        const { default: { client } } = await import('./index.js');
-        bot = client;
-
-        logger.success('Bot successfully started!');
+        const { client: newClient } = require('./index.js');
+        client = newClient;
     } catch (error) {
         logger.error('There was a problem initializing the bot:', error);
         process.exit(1);
     }
 }
 
+async function reloadCommands() {
+    try {
+        // Clear require cache for command files
+        Object.keys(require.cache).forEach(key => {
+            if (key.includes('commands') || key.includes('slashCommands')) {
+                delete require.cache[key];
+            }
+        });
+
+        const { loadCommands } = require('./handlers/commandHandler.js');
+        await loadCommands(client);
+        logger.success('Commands reloaded!');
+    } catch (error) {
+        logger.error('Error reloading commands:', error);
+    }
+}
+
+async function reloadEvents() {
+    try {
+        // Remove all listeners
+        client.removeAllListeners();
+        
+        // Clear require cache for event files
+        Object.keys(require.cache).forEach(key => {
+            if (key.includes('events')) {
+                delete require.cache[key];
+            }
+        });
+
+        const { loadEvents } = require('./handlers/eventHandler.js');
+        await loadEvents(client);
+        logger.success('Events reloaded!');
+    } catch (error) {
+        logger.error('Error reloading events:', error);
+    }
+}
+
 function watchFiles() {
-    const watcher = chokidar.watch(join(__dirname, '**', '*.js'), {
-        ignored: /(^|[/\\])\../,
-        persistent: true
+    const watcher = chokidar.watch(path.join(__dirname, '**', '*.js'), {
+        ignored: [/(^|[/\\])\../, 'node_modules'],
+        persistent: true,
+        ignoreInitial: true
     });
 
-    watcher.on('change', async (path) => {
+    watcher.on('change', async (filePath) => {
         if (isRestarting) return;
         isRestarting = true;
 
-        logger.warning('File change detected:', path);
-        logger.info('Bot restarting...');
+        logger.warning('File change detected:', filePath);
 
         try {
-            // Clear Node.js require cache
-            const cacheKeys = Object.keys(require.cache);
-            for (const key of cacheKeys) {
-                delete require.cache[key];
+            if (filePath.includes('commands') || filePath.includes('slashCommands')) {
+                // Reload commands
+                await reloadCommands();
+            } 
+            else if (filePath.includes('events')) {
+                // Reload events
+                await reloadEvents();
             }
-
-            await startBot();
+            else {
+                logger.info('Core file changed, restarting bot...');
+                Object.keys(require.cache).forEach(key => delete require.cache[key]);
+                await startBot();
+            }
         } catch (error) {
-            logger.error('Error during bot restart:', error);
+            logger.error('Error during reload:', error);
         } finally {
             isRestarting = false;
         }

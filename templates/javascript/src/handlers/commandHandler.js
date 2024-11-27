@@ -1,32 +1,30 @@
-import { Collection } from 'discord.js';
-import { readdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+const fs = require('fs');
+const path = require('path');
+const { Collection } = require('discord.js');
+const { logger } = require('../utils/logger');
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-export async function loadCommands(client) {
+async function loadCommands(client) {
     client.commands = new Collection();
     client.slashCommands = new Collection();
     client.commandArray = [];
 
     // Normal komutları yükle
-    const commandsPath = join(__dirname, '..', 'commands');
-    const commandFiles = readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+    const commandsPath = path.join(__dirname, '..', 'commands');
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
     for (const file of commandFiles) {
-        const filePath = join(commandsPath, file);
-        const command = (await import('file://' + filePath)).default;
+        const filePath = path.join(commandsPath, file);
+        const command = require(filePath);
         client.commands.set(command.name, command);
     }
 
     // Slash komutları yükle
-    const slashCommandsPath = join(__dirname, '..', 'slashCommands');
-    const slashCommandFiles = readdirSync(slashCommandsPath).filter(file => file.endsWith('.js'));
+    const slashCommandsPath = path.join(__dirname, '..', 'slashCommands');
+    const slashCommandFiles = fs.readdirSync(slashCommandsPath).filter(file => file.endsWith('.js'));
 
     for (const file of slashCommandFiles) {
-        const filePath = join(slashCommandsPath, file);
-        const command = (await import('file://' + filePath)).default;
+        const filePath = path.join(slashCommandsPath, file);
+        const command = require(filePath);
         
         if ('data' in command && 'execute' in command) {
             client.slashCommands.set(command.data.name, command);
@@ -34,3 +32,5 @@ export async function loadCommands(client) {
         }
     }
 }
+
+module.exports = { loadCommands };

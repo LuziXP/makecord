@@ -1,6 +1,6 @@
-import { Events } from 'discord.js';
+const { Events } = require('discord.js');
 
-export default {
+module.exports = {
     name: Events.InteractionCreate,
     async execute(interaction) {
         if (!interaction.isChatInputCommand()) return;
@@ -13,9 +13,9 @@ export default {
         } catch (error) {
             console.error(error);
             if (interaction.replied || interaction.deferred) {
-                await interaction.followUp({ content: 'Komutu çalıştırırken bir hata oluştu!', ephemeral: true });
+                await interaction.followUp({ content: 'An error occurred while executing the command!', ephemeral: true });
             } else {
-                await interaction.reply({ content: 'Komutu çalıştırırken bir hata oluştu!', ephemeral: true });
+                await interaction.reply({ content: 'An error occurred while executing the command!', ephemeral: true });
             }
         }
     },

@@ -1,4 +1,4 @@
-export default {
+module.exports = {
     name: 'ping',
     description: 'Shows bot latency',
     execute(message, args) {

@@ -1,20 +1,18 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
+const { config } = require('./config');
+const { logger } = require('./utils/logger');
 
-export async function connectDatabase() {
+async function connectDatabase() {
     try {
-        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/discordbot');
-        console.log('MongoDB bağlantısı başarılı!');
+        await mongoose.connect(config.MONGODB_URI).then(() => {
+            logger.success('MongoDB connection successful!');
+        }).catch(error => {
+            logger.error('MONGODB_URI invalid or not defined! Skipped...');
+        });
     } catch (error) {
-        console.error('MongoDB bağlantı hatası:', error);
+        logger.error('MongoDB connection error:', error);
         process.exit(1);
     }
 }
 
-// Örnek bir model
-const exampleSchema = new mongoose.Schema({
-    guildId: String,
-    userId: String,
-    data: mongoose.Schema.Types.Mixed
-});
-
-export const Example = mongoose.model('Example', exampleSchema);
+module.exports = { connectDatabase };
