@@ -4,11 +4,14 @@ import inquirer from 'inquirer';
 import fs from 'fs';
 import path from 'path';
 import chalk from 'chalk';
-import { fileURLToPath } from 'url';
 import ora from 'ora';
+import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+console.log(chalk.green('Welcome to Makecord 1.0.5 (BETA)'));
+console.log(chalk.yellow('https://npmjs.com/makecord-create\n'));
 
 const questions = [
     {
@@ -16,12 +19,6 @@ const questions = [
         name: 'projectName',
         message: 'Enter the project name (you can use the existing folder by leaving it blank):',
         default: ''
-    },
-    {
-        type: 'confirm',
-        name: 'typescript',
-        message: 'Use TypeScript?',
-        default: false
     },
     {
         type: 'confirm',
@@ -61,7 +58,6 @@ async function createProject() {
         
         console.log('\n' + chalk.cyan('Project Details:'));
         console.log(chalk.yellow('Project Name: ') + (answers.projectName || 'Current Folder'));
-        console.log(chalk.yellow('TypeScript: ') + (answers.typescript ? 'Yes' : 'No'));
         console.log(chalk.yellow('Database: ') + (answers.database ? answers.databaseType : 'No'));
 
         const confirmation = await inquirer.prompt([
@@ -93,29 +89,39 @@ async function createProject() {
         }
 
         // Copy template files
-        const templatePath = path.join(__dirname, 'templates', answers.typescript ? 'typescript' : 'javascript');
+        const templatePath = path.join(__dirname, 'templates', 'javascript');
         copyFolderSync(templatePath, projectPath);
+
+        // Update package.json with project name
+        const packageJsonPath = path.join(projectPath, 'package.json');
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        
+        // Set package name based on project name or current directory
+        packageJson.name = answers.projectName || path.basename(process.cwd());
 
         // Add database
         if (answers.database) {
+            // Copy database file
             const dbTemplatePath = path.join(__dirname, 'templates', 'database', 
-                answers.databaseType.toLowerCase() + (answers.typescript ? '.ts' : '.js'));
+                answers.databaseType.toLowerCase() + '.js');
             
-            const dbFilePath = path.join(projectPath, 'src', 'database' + (answers.typescript ? '.ts' : '.js'));
+            const dbFilePath = path.join(projectPath, 'src', 'database.js');
             fs.mkdirSync(path.dirname(dbFilePath), { recursive: true });
             fs.copyFileSync(dbTemplatePath, dbFilePath);
 
-            const packageJsonPath = path.join(projectPath, 'package.json');
-            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-            
+            // For MongoDB, also copy schemas
             if (answers.databaseType === 'MongoDB') {
+                const schemasPath = path.join(__dirname, 'templates', 'database', 'schemas');
+                const targetSchemasPath = path.join(projectPath, 'src', 'schemas');
+                copyFolderSync(schemasPath, targetSchemasPath);
                 packageJson.dependencies.mongoose = '^7.6.5';
             } else {
                 packageJson.dependencies.croxydb = '^0.0.7';
             }
-
-            fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
         }
+
+        // Write updated package.json
+        fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
         spinner.succeed('Project successfully created!');
         

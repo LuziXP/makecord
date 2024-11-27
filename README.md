@@ -1,6 +1,6 @@
-# makecord-create
+# Makecord (beta)
 
-Quickstart template generator for Discord.js bots.
+Create basic Discord Bots with Makecord
 
 ## Usage
 
@@ -11,15 +11,13 @@ npx makecord-create
 This command will launch an interactive CLI with the following options:
 
 1. Project name (or option to use existing folder)
-2. TypeScript support
-3. Database integration
-4. Database type selection (MongoDB or CroxyDB)
+2. Database integration
+3. Database type selection (**MongoDB** or **CroxyDB**)
 
 ## Features
 
 - Modern Discord.js v14 support
-- JavaScript or TypeScript templates
-- Optional database integration (MongoDB/CroxyDB)
+- Optional database integration (**MongoDB**/**CroxyDB**)
 - Ready-to-use project structure
 - Basic command examples
 - Hot-reloading support
@@ -28,7 +26,7 @@ This command will launch an interactive CLI with the following options:
 
 ## After Installation
 
-1. Edit `config.js` (or `config.ts`) and add your bot token
+1. Edit `config.js` and add your bot token
 2. Install the necessary packages: `npm install`
 3. Start the bot: `npm start`
 
@@ -41,7 +39,8 @@ src/
 ├── events/           # Discord.js event handlers
 ├── handlers/         # Command and event loaders
 ├── utils/           # Utility functions
-└── config.js        # Bot configuration
+├── config.js        # Bot configuration
+└── index.js        # Bot main file
 ```
 
 ## License

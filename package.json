@@ -1,14 +1,14 @@
 {
   "name": "makecord-create",
-  "version": "1.0.5",
-  "description": "Create Discord.js bots with ease",
+  "version": "1.1.1",
+  "description": "Create basic Discord Bots with Makecord",
   "main": "index.js",
   "type": "module",
   "bin": {
     "makecord-create": "./index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
   "keywords": [
     "discord",
@@ -20,10 +20,11 @@
     "discord-bot",
     "makecord"
   ],
-  "author": "luzixp",
+  "author": "LuziXP",
   "license": "MIT",
   "dependencies": {
     "chalk": "^5.3.0",
+    "gradient-string": "^2.0.2",
     "inquirer": "^9.2.12",
     "ora": "^7.0.1"
   },
